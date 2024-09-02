@@ -47,17 +47,41 @@ FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struc
 void sc_must_read_filter_from_file(FILE *file, uint32_t len_bytes, struct sock_fprog *prog)
 {
 	prog->len = len_bytes / sizeof(struct sock_filter);
-	prog->filter = (struct sock_filter *)malloc(MAX_BPF_SIZE);
+	// When reading syscall numbers or other data, ensure they are within valid ranges. This should be done in the loop where the file is being read:
+	if (prog->len > MAX_BPF_SIZE / sizeof(struct sock_filter)) {
+	    die("seccomp filter too large");
+	    fclose(file); // Add this line to close the file on error
+	    return NULL; // Add this line to handle the error properly
+	}
+	
+	// Ensure any dynamically allocated memory is properly managed. For example, if you allocate memory for a buffer, make sure to free it:
+	// prog->filter = (struct sock_filter *)malloc(MAX_BPF_SIZE);
+	prog->filter = malloc(len_bytes);
+	if (prog->filter == NULL) {
+	    die("cannot allocate %u bytes of memory for seccomp filter", len_bytes);
+	    fclose(file); // Add this line to close the file on error
+	    return NULL; // Add this line to handle the error properly
+	}
+
 	if (prog->filter == NULL) {
 		die("cannot allocate %u bytes of memory for seccomp filter ", len_bytes);
 	}
+	// When reading data into buffers, ensure boundary checks are in place to prevent buffer overflows:
 	size_t num_read = fread(prog->filter, 1, len_bytes, file);
+	if (num_read != len_bytes) {
+	    die("short read for filter %zu != %zu\n", num_read, len_bytes);
+	    fclose(file); // Add this line to close the file on error
+	    return NULL; // Add this line to handle the error properly
+	}
+
 	if (ferror(file)) {
 		die("cannot read filter");
 	}
 	if (num_read != len_bytes) {
 		die("short read for filter %zu != %i", num_read, len_bytes);
 	}
+	
+	free(prog->filter); // Add this line to free the allocated memory
 }
 
 int seccomp(unsigned int operation, unsigned int flags, void *args) {
