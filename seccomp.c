@@ -38,8 +38,33 @@ FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struc
 	if (ferror(file) != 0) {
 		die("cannot read seccomp profile %s", profile_path);
 	}
+	if (hdr->header[0] != 'S' || hdr->header[1] != 'C') {
+		die("Unexpected seccomp header: %x%x", hdr->header[0], hdr->header[1]);
+	}
+	if (hdr->version != 0x1) {
+		die("Unexpected version: %x", hdr->version);
+	}
+	if (!(hdr->unrestricted == 0x0 || hdr->unrestricted == 0x1)) {
+		die("Unexpected unrestricted value: %x", hdr->unrestricted);
+	}
+	if (hdr->len_filter > MAX_BPF_SIZE) {
+		die("Allow filter size too big %u", hdr->len_filter);
+	}
 	if (num_read < sizeof(struct sc_seccomp_file_header)) {
 		die("short read on seccomp header: %zu", num_read);
+	}
+	// Check all seccompt header attributes 
+	if (hdr->header[0] != 'S' || hdr->header[1] != 'C') {
+		die("Unexpected seccomp header: %x%x", hdr->header[0], hdr->header[1]);
+	}
+	if (hdr->version != 0x1) {
+		die("Unexpected version: %x", hdr->version);
+	}
+	if (!(hdr->unrestricted == 0x0 || hdr->unrestricted == 0x1)) {
+		die("Unexpected unrestricted value: %x", hdr->unrestricted);
+	}
+	if (hdr->len_filter > MAX_BPF_SIZE) {
+		die("Allow filter size too big %u", hdr->len_filter);
 	}
 	return file;
 }
