@@ -16,4 +16,6 @@ int main(int argc, char **argv) {
 
 
 	sc_apply_seccomp_filter(&prog_allow);
+	fclose(file);
+	fprintf(stdout, "Filter loaded\n");
 }
