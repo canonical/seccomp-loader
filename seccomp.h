@@ -7,6 +7,8 @@
 
 #include <linux/filter.h>
 
+#define MAX_BPF_SIZE 32*1024
+
 struct sc_seccomp_file_header {
 	char header[2];
 	uint8_t version;
