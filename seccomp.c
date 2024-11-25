@@ -2,7 +2,6 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -10,13 +9,10 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 
-#include <linux/filter.h>
 #include <linux/prctl.h>
 #include <linux/seccomp.h>
 
 #include "seccomp.h"
-
-#define MAX_BPF_SIZE 32*1024
 
 void die(const char *msg, ...)
 {
