@@ -41,6 +41,29 @@ FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struc
 	if (num_read < sizeof(struct sc_seccomp_file_header)) {
 		die("short read on seccomp header: %zu", num_read);
 	}
+
+	// Validate version
+	if (hdr->version != 0x1) {
+		die("invalid version: %d (expected 0x1)", hdr->version);
+	}
+
+	// Validate unrestricted flag
+	if (hdr->unrestricted != 0x0 && hdr->unrestricted != 0x1) {
+		die("invalid unrestricted flag: %d (expected 0x0 or 0x1)", hdr->unrestricted);
+	}
+
+	// Validate reserved2 field is zeroed
+	for (int i = 0; i < sizeof(hdr->reserved2); i++) {
+		if (hdr->reserved2[i] != 0) {
+			die("reserved2 field must be zeroed");
+		}
+	}
+
+	// Validate filter length is multiple of sock_filter size
+	if (hdr->len_filter % sizeof(struct sock_filter) != 0) {
+		die("filter length must be multiple of %zu", sizeof(struct sock_filter));
+	}
+
 	return file;
 }
 

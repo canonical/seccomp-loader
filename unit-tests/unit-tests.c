@@ -27,10 +27,49 @@ static void test_must_read_and_validate_header_from_file__happy(void)
 	g_assert_true(file != NULL);
 }
 
+static void test_must_read_and_validate_header_from_file__invalid_version(void)
+{
+	struct sc_seccomp_file_header hdr = {
+		.header[0] = 'S',
+		.header[1] = 'C',
+		.version = 2,  // Invalid version
+	};
+	char *profile = NULL;
+	int fd = 0;
+	make_seccomp_profile(&hdr, &fd, &profile);
+
+	// Should die with invalid version error
+	g_test_trap_subprocess(NULL, 0, 0);
+	sc_must_read_and_validate_header_from_file(profile, &hdr);
+	g_test_trap_assert_failed();
+}
+
+static void test_must_read_and_validate_header_from_file__invalid_unrestricted(void)
+{
+	struct sc_seccomp_file_header hdr = {
+		.header[0] = 'S',
+		.header[1] = 'C',
+		.version = 1,
+		.unrestricted = 2,  // Invalid unrestricted flag
+	};
+	char *profile = NULL;
+	int fd = 0;
+	make_seccomp_profile(&hdr, &fd, &profile);
+
+	// Should die with invalid unrestricted error
+	g_test_trap_subprocess(NULL, 0, 0);
+	sc_must_read_and_validate_header_from_file(profile, &hdr);
+	g_test_trap_assert_failed();
+}
+
 static void __attribute__((constructor)) init(void)
 {
 	g_test_add_func("/seccomp/must_read_and_validate_header_from_file/happy",
 	     test_must_read_and_validate_header_from_file__happy);
+	g_test_add_func("/seccomp/must_read_and_validate_header_from_file/invalid_version",
+	     test_must_read_and_validate_header_from_file__invalid_version);
+	g_test_add_func("/seccomp/must_read_and_validate_header_from_file/invalid_unrestricted",
+	     test_must_read_and_validate_header_from_file__invalid_unrestricted);
 }
 
 int main(int argc, char **argv)
