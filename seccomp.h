@@ -22,6 +22,6 @@ void sc_must_read_filter_from_file(FILE *file, uint32_t len_bytes, struct sock_f
 FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struct sc_seccomp_file_header *hdr);
 void sc_apply_seccomp_filter(struct sock_fprog *prog);
 
-void die(const char *fmt, ...);
+__attribute__((noreturn)) void die(const char *fmt, ...);
 
 #endif // X_SECCOMP_H

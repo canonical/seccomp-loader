@@ -18,7 +18,7 @@
 
 #define MAX_BPF_SIZE 32*1024
 
-void die(const char *msg, ...)
+__attribute__((noreturn)) void die(const char *msg, ...)
 {
 	va_list ap;
 	va_start(ap, msg);
