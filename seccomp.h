@@ -1,12 +1,10 @@
 #ifndef X_SECCOMP_H
-#define X_SUPPORT_H
-
+#define X_SECCOMP_H
 
 #include <stdio.h>
 #include <stdint.h>
 
 #include <linux/filter.h>
-
 
 struct sc_seccomp_file_header {
 	// must be 'S', 'C'
@@ -26,5 +24,4 @@ void sc_apply_seccomp_filter(struct sock_fprog *prog);
 
 void die(const char *fmt, ...);
 
-#endif
-
+#endif // X_SECCOMP_H
