@@ -84,13 +84,13 @@ void sc_must_read_filter_from_file(FILE *file, uint32_t len_bytes, struct sock_f
 	}
 }
 
-int seccomp(unsigned int operation, unsigned int flags, void *args) {
+int seccomp_syscall(unsigned int operation, unsigned int flags, void *args) {
 	errno = 0;
 	return syscall(__NR_seccomp, operation, flags, args);
 }
 
 void sc_apply_seccomp_filter(struct sock_fprog *prog) {
-	int err = seccomp(SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_LOG, prog);
+	int err = seccomp_syscall(SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_LOG, prog);
 	if (err != 0) {
 		die("cannot apply seccomp profile");
 	}
