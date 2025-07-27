@@ -34,20 +34,29 @@ FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struc
 	if (file == NULL) {
 		die("cannot open seccomp filter %s", profile_path);
 	}
+
 	size_t num_read = fread(hdr, 1, sizeof(struct sc_seccomp_file_header), file);
-	if (ferror(file) != 0) {
-		die("cannot read seccomp profile %s", profile_path);
+	if (ferror(file) || num_read < sizeof(struct sc_seccomp_file_header)) {
+		fclose(file);
+		if (ferror(file)) {
+			die("cannot read filter");
+		}
+		else {
+			die("short read for filter %zu != %u", num_read, sizeof(struct sc_seccomp_file_header));
+		}
 	}
-	if (num_read < sizeof(struct sc_seccomp_file_header)) {
-		die("short read on seccomp header: %zu", num_read);
-	}
+
 	// check everything
 	if (hdr->header[0] != 'S' || hdr->header[1] != 'C') {
+		fclose(file);
 		die("unexpected seccomp header: %x%x", hdr->header[0], hdr->header[1]);
 	}
+
 	if (hdr->len_filter > MAX_BPF_SIZE) {
+		fclose(file);
 		die("allow filter size too big %u", hdr->len_filter);
 	}
+
 	return file;
 }
 
@@ -62,12 +71,16 @@ void sc_must_read_filter_from_file(FILE *file, uint32_t len_bytes, struct sock_f
 	if (prog->filter == NULL) {
 		die("cannot allocate %u bytes of memory for seccomp filter ", len_bytes);
 	}
+
 	size_t num_read = fread(prog->filter, 1, len_bytes, file);
-	if (ferror(file)) {
-		die("cannot read filter");
-	}
-	if (num_read != len_bytes) {
-		die("short read for filter %zu != %i", num_read, len_bytes);
+	if (ferror(file) || num_read != len_bytes) {
+		free(prog->filter);
+		if (ferror(file)) {
+			die("cannot read filter");
+		}
+		else {
+			die("short read for filter %zu != %u", num_read, len_bytes);
+		}
 	}
 }
 
