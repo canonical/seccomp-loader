@@ -7,6 +7,11 @@
 
 #include <linux/filter.h>
 
+/* Validations Constants */
+#define SC_HEADER_MAGIC_0 'S'
+#define SC_HEADER_MAGIC_1 'C'
+#define SC_VERSION 1
+
 struct sc_seccomp_file_header {
 	char header[2];
 	uint8_t version;
