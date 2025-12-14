@@ -41,16 +41,45 @@ FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struc
 	if (num_read < sizeof(struct sc_seccomp_file_header)) {
 		die("short read on seccomp header: %zu", num_read);
 	}
+
+	/* Validation: Magic Bytes */
+	if (hdr->header[0] != SC_HEADER_MAGIC_0 || hdr->header[1] != SC_HEADER_MAGIC_1) {
+		die("invalid seccomp file header magic");
+	}
+
+	/* Validation: Version */
+	if (hdr->version != SC_VERSION) {
+		die("unsupported seccomp file version: %d", hdr->version);
+	}
+
+	/* Validation: Filter Length (Size Limit) */
+	if (hdr->len_filter > MAX_BPF_SIZE) {
+		die("seccomp filter too large: %u (max %d)", hdr->len_filter, MAX_BPF_SIZE);
+	}
+
+	/* Validation: Filter Length (Alignment) */
+	if (hdr->len_filter % sizeof(struct sock_filter) != 0) {
+		die("invalid seccomp filter length: %u (must be multiple of %zu)", 
+		    hdr->len_filter, sizeof(struct sock_filter));
+	}
+
 	return file;
 }
 
 void sc_must_read_filter_from_file(FILE *file, uint32_t len_bytes, struct sock_fprog *prog)
 {
+	/* Double check length before allocation */
+	if (len_bytes > MAX_BPF_SIZE) {
+		die("filter length %u exceeds max %d", len_bytes, MAX_BPF_SIZE);
+	}
+
 	prog->len = len_bytes / sizeof(struct sock_filter);
-	prog->filter = (struct sock_filter *)malloc(MAX_BPF_SIZE);
+	
+	prog->filter = (struct sock_filter *)malloc(len_bytes);
 	if (prog->filter == NULL) {
 		die("cannot allocate %u bytes of memory for seccomp filter ", len_bytes);
 	}
+	
 	size_t num_read = fread(prog->filter, 1, len_bytes, file);
 	if (ferror(file)) {
 		die("cannot read filter");
@@ -71,4 +100,3 @@ void sc_apply_seccomp_filter(struct sock_fprog *prog) {
 		die("cannot apply seccomp profile");
 	}
 }
-
