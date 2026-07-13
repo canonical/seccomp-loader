@@ -16,7 +16,7 @@
 
 #include "seccomp.h"
 
-#define MAX_BPF_SIZE 32*1024
+#define MAX_BPF_SIZE 32 * 1024
 
 void die(const char *msg, ...)
 {
@@ -28,6 +28,7 @@ void die(const char *msg, ...)
 	exit(1);
 }
 
+// Checks are not enough. Need to add checks for header, version and unrestricted fields of the sc_seccomp_file_header struct to ensure they are valid before proceeding with reading the filter from the file.
 FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struct sc_seccomp_file_header *hdr)
 {
 	FILE *file = fopen(profile_path, "rb");
@@ -35,7 +36,7 @@ FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struc
 		die("cannot open seccomp filter %s", profile_path);
 	}
 	size_t num_read = fread(hdr, 1, sizeof(struct sc_seccomp_file_header), file);
-	if (ferror(file) != 0) {
+	if (ferror(file) != 0) { // Add error value to the log message to provide more context on the error.
 		die("cannot read seccomp profile %s", profile_path);
 	}
 	if (num_read < sizeof(struct sc_seccomp_file_header)) {
@@ -52,7 +53,7 @@ void sc_must_read_filter_from_file(FILE *file, uint32_t len_bytes, struct sock_f
 		die("cannot allocate %u bytes of memory for seccomp filter ", len_bytes);
 	}
 	size_t num_read = fread(prog->filter, 1, len_bytes, file);
-	if (ferror(file)) {
+	if (ferror(file)) { // Add error value to the log message to provide more context on the error.
 		die("cannot read filter");
 	}
 	if (num_read != len_bytes) {
@@ -67,7 +68,7 @@ int seccomp(unsigned int operation, unsigned int flags, void *args) {
 
 void sc_apply_seccomp_filter(struct sock_fprog *prog) {
 	int err = seccomp(SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_LOG, prog);
-	if (err != 0) {
+	if (err != 0) { // Add error value to the log message to provide more context on the error.
 		die("cannot apply seccomp profile");
 	}
 }

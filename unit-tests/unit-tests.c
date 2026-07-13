@@ -26,12 +26,14 @@ static void test_must_read_and_validate_header_from_file__happy(void)
 	    sc_must_read_and_validate_header_from_file(profile, &hdr);
 	g_assert_true(file != NULL);
 }
-
+// Unit tests should be added for checking the missing version and unrestricted fields in the sc_seccomp_file_header struct to ensure that the validation logic is working correctly.
+// Unit tests should also be added for wrong header values 
 static void __attribute__((constructor)) init(void)
 {
 	g_test_add_func("/seccomp/must_read_and_validate_header_from_file/happy",
 	     test_must_read_and_validate_header_from_file__happy);
 }
+
 
 int main(int argc, char **argv)
 {
