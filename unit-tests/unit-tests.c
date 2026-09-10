@@ -2,6 +2,11 @@
 
 #include "seccomp.c"
 
+// Could be a good idea to add test that verify unhappy paths, not just the happy paths. So we know that error handling
+// is working as expected
+
+// Also add test for sc_must_read_filter_from_file, which are missing
+
 static void make_seccomp_profile(struct sc_seccomp_file_header *hdr, int *fd,
 				 char **fname)
 {
