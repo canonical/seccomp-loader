@@ -1,8 +1,8 @@
-#include <errno.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <errno.h> 
+#include <limits.h> 
+#include <stdarg.h> 
+#include <stdint.h> //this header already included in seccomp.h, we could remove this line to avoid duplicate include.
+#include <stdio.h> //this header already included in seccomp.h, we could remove this line to avoid duplicate include.
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -16,9 +16,14 @@
 
 #include "seccomp.h"
 
-#define MAX_BPF_SIZE 32*1024
+#define MAX_BPF_SIZE 32*1024//this is a magic number which can create a confusion in the future regarding what 32*1024 is. 
+							// We could  define the number in preprocessing like #define MAX_BPF_SIZE (the multiplication result) 
+							// this will reduce the running time, Also there may be confusion on why this variable is named MAX_BPF_SIZE, 
+							// it may need a comment pointing what it is for to make clear distinction on other variables.
 
-void die(const char *msg, ...)
+void die(const char *msg, ...) //the function name doesn't define what it is doing which could cause 
+								//confusion in the future, we could assigned a new name descripting what 
+								//the function is for like 'void print_message(const char *msg, ...)
 {
 	va_list ap;
 	va_start(ap, msg);
@@ -26,6 +31,16 @@ void die(const char *msg, ...)
 	fprintf(stderr, "\n");
 	va_end(ap);
 	exit(1);
+	// this function doesnt check for null which can cause compilation error, 
+	// it also doesn,t have any exception check to make sure the input are as expected.
+
+	// we could:
+	// 1. Check for null before printing the string
+	// 2. check if the message are a string
+	// 3. check if the string size are not overflowing.
+
+	// these checks made sure the function can work waithout causing error or memory problem 
+	// considering this function are called a lot of time in the codes.
 }
 
 FILE* sc_must_read_and_validate_header_from_file(const char *profile_path, struct sc_seccomp_file_header *hdr)
